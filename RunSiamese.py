@@ -1,10 +1,12 @@
 from Model import SiameseModel
 import cv2
 import numpy as np
+import os
 
-Image1 =  cv2.imread('TestModel1.png')
-Image2 = cv2.imread('TestModel2.png')
+os.system('cls')
+
 
 model  = SiameseModel()
-Pred = model.PredictOnePairImage(Image1,Image2)
-print(Pred)
+model.LoadRawData('./Data')
+model.Train('WeightProject.h5')
+# Pred = model.PredictOnePairImage(Image1,Image2)

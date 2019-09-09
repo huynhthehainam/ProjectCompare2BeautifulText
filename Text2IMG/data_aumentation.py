@@ -140,7 +140,7 @@ def text2IMG(sequences):
         
     print('done.')
 doc_path = './Text/'
-nb_sequence = 20
+nb_sequence = 1000
 token_index,index_token = getTokens(doc_path)
 sequences = randSeq(index_token,nb_sequence)
 text2IMG(sequences)

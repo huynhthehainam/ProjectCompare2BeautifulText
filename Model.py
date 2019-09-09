@@ -35,8 +35,6 @@ class SiameseModel:
     def initialize_bias(self,shape, name=None):
         return np.random.normal(loc = 0.5, scale = 1e-2, size = shape)
     def get_siamese_model(self,input_shape):
-        """Model architecture based on the one provided in:
-        http://www.cs.utoronto.ca/~gkoch/files/msc-thesis.pdf."""
         left_input = Input(input_shape)
         right_input = Input(input_shape)
         model = Sequential()
@@ -125,25 +123,34 @@ class SiameseModel:
                     BatchLocation0 = []
                     BatchLocation1 =[]
                     Labels.append(InBatchLabel)
-                    InBatch = []
+                    InBatchLabel = []
+                BatchLocation0.append(self.InputByLocation[i][0])
+                BatchLocation1.append(self.InputByLocation[i][1])
+                InBatchLabel.append(self.Labels[i])
         return Pair, Labels
     def GetImageFromLocation(self, Location):
         return self.Data[Location[0]][Location[1]]
     
     def ConvertPairLocationToPairImage(self, Pair):
-        ImageList0=[self.GetImageFromLocation(Location) for Location in Pair[0]]
-        ImageList1 = [self.GetImageFromLocation(Location) for Location in Pair[1]]
+        ImageList0=np.array([self.GetImageFromLocation(Location) for Location in Pair[0]])
+        ImageList1 = np.array([self.GetImageFromLocation(Location) for Location in Pair[1]])
         return [ImageList0,ImageList1]
 
 
     
     def Train(self, SaveModelPath = None):
         Pairs, Labels = self.GetBatch()
+        print(len(Labels[0]))
         for  i  in range(self.Epochs):
             for ii in range(len(Pairs)):
-                X = self.ConvertPairLocationToPairImage(Pair[ii])
-                Y = Labels[ii]
-                self.Model.train_on_batch(X,Y)
+                X = self.ConvertPairLocationToPairImage(Pairs[ii])
+                Y = np.array(Labels[ii])
+                loss = self.Model.train_on_batch(X,Y)
+                print(len(Y))
+            print('Loss: {}'.format(loss))
+
+            if SaveModelPath:
+                self.Model.save_weights(SaveModelPath)
         print('Train finished')
         return True
 
