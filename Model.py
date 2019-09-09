@@ -146,7 +146,6 @@ class SiameseModel:
                 X = self.ConvertPairLocationToPairImage(Pairs[ii])
                 Y = np.array(Labels[ii])
                 loss = self.Model.train_on_batch(X,Y)
-                print(len(Y))
             print('Loss: {}'.format(loss))
 
             if SaveModelPath:
