@@ -27,7 +27,7 @@ from random import random
 
 
 class SiameseModel:
-    NumberTotalData = 200
+    NumberTotalData = 200000
     BatchSize = 32
     Epochs = 200
     def initialize_weights(self,shape, name=None):
@@ -81,6 +81,7 @@ class SiameseModel:
 
         return True
     def ProcessRawData(self):
+        print('Start creating batch')
         self.InputByLocation = []
         self.Labels = []
         for i in range(self.NumberTotalData):
@@ -139,6 +140,7 @@ class SiameseModel:
 
     
     def Train(self, SaveModelPath = None):
+        print('Start training')
         Pairs, Labels = self.GetBatch()
         print(len(Labels[0]))
         for  i  in range(self.Epochs):
