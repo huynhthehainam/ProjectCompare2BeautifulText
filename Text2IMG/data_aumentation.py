@@ -70,7 +70,7 @@ def randSeq(index_token,nb_sequence):
     for i in range(nb_sequence):
         width = 0
         sequence = ''
-        random.shuffle(key_list)
+        #random.shuffle(key_list)
         random.shuffle(nb_words)
         for idx in range(nb_words[0]):
             #sequence += ' '+index_token[key_list[idx]]
@@ -135,7 +135,7 @@ def text2IMG(sequences):
                 	image = batch[0].astype('uint8')
                 	pyplot.imsave(save_path+str(seq_idx)+'/img-'+str(count)+'-'+bg_without_ext+'-'+f_without_ext+'.png',image)
                 print ('generate image-'+ str(count)+ '.png done.')
-                count += 1
+                #count += 1
         seq_idx += 1
         
     print('done.')
