@@ -146,8 +146,8 @@ class SiameseModel:
                 X = self.ConvertPairLocationToPairImage(Pairs[ii])
                 Y = np.array(Labels[ii])
                 loss = self.Model.train_on_batch(X,Y)
-            print('Loss: {}'.format(loss))
-
+            print('Epochs {} Loss: {}'.format(i,loss))
+            self.TestOneShot()
             if SaveModelPath:
                 self.Model.save_weights(SaveModelPath)
         print('Train finished')
@@ -156,6 +156,26 @@ class SiameseModel:
     def LoadWeight(self, WeightPath):
         self.Model.load_weights(WeightPath)
         return True
+    
+    def TestOneShot(self):
+        RandFolders = np.random.randint(len(self.Data),size = 2)
+        Folder1 = RandFolders[0]
+        Folder2 = RandFolders[1]
+        RandImages =  np.random.randint(10,size = 2)
+        RandImage1 = RandImages[0]
+        RandImage2 = RandImages[1]
+        Image1 = self.Data[Folder1][RandImage1]
+        Image2 = self.Data[Folder1][RandImage2]
+        Label = 1
+        print('Label: {}, Predict: {}'.format(Label,self.PredictOnePairImage(Image1,Image2)))
+        Image2 = self.Data[Folder2][RandImage2]
+        if Folder1 ==Folder2:
+            Label = 1
+        else:
+            Label = 0
+        print('Label: {}, Predict: {}'.format(Label,self.PredictOnePairImage(Image1,Image2)))
+        return True
+          
 
     def PredictOnePairImage(self, Image1, Image2):
         Image1 = np.array([Image1])
