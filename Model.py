@@ -22,12 +22,12 @@ import tensorflow as tf
 import numpy.random as rng
 from sklearn.utils import shuffle
 import glob
-from random import random
+import random
 
 
 
 class SiameseModel:
-    NumberTotalData = 200000
+    NumberTotalData = 200
     BatchSize = 32
     Epochs = 200
     def initialize_weights(self,shape, name=None):
@@ -88,14 +88,14 @@ class SiameseModel:
             RandFolders = np.random.randint(len(self.Data),size = 2)
             Folder1 = RandFolders[0]
             Folder2 = RandFolders[1]
-            RandImages =  np.random.randint(9,size = 2)
+            RandImages = random.sample(list(range(10)),k = 2)
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder1,RandImage2]]
             if Location not in self.InputByLocation:
                 self.InputByLocation.append(Location)
                 self.Labels.append(1)
-            RandImages =  np.random.randint(9,size = 2)
+            RandImages = random.sample(list(range(10)),k = 2)
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder2,RandImage2]]
@@ -141,7 +141,7 @@ class SiameseModel:
     
     def Train(self, SaveModelPath = None):
         print('Start training')
-        Pairs, Labels = self.GetBatch()
+        Pairs, Labels = random.shuffle(self.GetBatch())
         print(len(Labels[0]))
         for  i  in range(self.Epochs):
             for ii in range(len(Pairs)):
@@ -161,10 +161,10 @@ class SiameseModel:
         return True
     
     def TestOneShot(self):
-        RandFolders = np.random.randint(len(self.Data),size = 2)
+        RandFolders = random.sample(list(range(len(self.Data))),k = 2)
         Folder1 = RandFolders[0]
         Folder2 = RandFolders[1]
-        RandImages =  np.random.randint(10,size = 2)
+        RandImages = random.sample(list(range(10)),k = 2)
         RandImage1 = RandImages[0]
         RandImage2 = RandImages[1]
         Image1 = self.Data[Folder1][RandImage1]
@@ -172,7 +172,7 @@ class SiameseModel:
         Label = 1
         print('Label: {}, Predict: {}'.format(Label,self.PredictOnePairImage(Image1,Image2)))
         Image2 = self.Data[Folder2][RandImage2]
-        if Folder1 ==Folder2:
+        if Folder1 == Folder2:
             Label = 1
         else:
             Label = 0
