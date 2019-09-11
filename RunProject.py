@@ -30,14 +30,18 @@ class CompareTwoTextImage:
             for RangeIndex in range(-2,3):
                 Index2 = min(max(0, Index1 + RangeIndex), len(ListWordImage2)-1)
                 Pred = self.Model.PredictOnePairImage(ListWordImage1[Index1],ListWordImage2[Index2])
-                ConcatImage = np.concatenate([ListWordImage1[Index1],ListWordImage2[Index2]], axis=1)
-                cv2.imshow('{}'.format(Pred[0][0]),ConcatImage)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+                
                 if Pred[0][0] >0.7:
                     IsSame = True
             if IsSame:
                 CounterSame+=1
+            else:
+                for RangeIndex in range(-2,3):
+                    Index2 = min(max(0, Index1 + RangeIndex), len(ListWordImage2)-1)
+                    ConcatImage = np.concatenate([ListWordImage1[Index1],ListWordImage2[Index2]], axis=1)
+                    cv2.imshow('{}'.format(Pred[0][0]),ConcatImage)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
         return CounterSame/len(ListWordImage1)*100
     def SplitWord(self, Image):
         files = glob.glob('./Result/*')
