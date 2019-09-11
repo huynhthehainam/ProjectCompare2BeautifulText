@@ -30,7 +30,7 @@ def ThesholdList(ListNumber, ThreshNumber):
 # img = cv2.imread('logo.jpg')
 
 def SplitWord(ImagePath):
-    ThreshHold1 = 15
+    ThreshHold1 = 25
     ThreshHold2 = 0
     print(ImagePath)
     Hihi=[]
@@ -126,7 +126,7 @@ def SplitWord(ImagePath):
             if len(SpaceWidthsInside)>0: 
                 SpaceWidthsInside.pop(0)
             if len(SpaceWidthsInside)>0:
-                # print('Best Angle: {} MaxSpace: {}'.format(AngleLoop,max(SpaceWidthsInside)))
+                # print('Best Angle: {} MaxSpace: {}'.format(AngleLoop,max                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            (SpaceWidthsInside)))
                 if len(SpaceWidthsInside) > MaxWidth:
                     MaxWidth = len(SpaceWidthsInside)
                     SpaceWidths = SpaceWidthsInside
@@ -166,8 +166,10 @@ def SplitWord(ImagePath):
         ListAmplitude = ThesholdList(ListAmplitude,ThreshHold2)
         for i, Amplitude in enumerate(ListAmplitude):
             if Amplitude > 0 and CurrentAmplitude <= 0 and IsDetectEndPoint:
-                
-                StartPoint = i
+                for NextPixel in range(1,SpaceWidth):
+                    if ListAmplitude[i - NextPixel]>0 or i - NextPixel<0:
+                        break
+                StartPoint = i - int(NextPixel/2)
                 IsDetectEndPoint = False
             if Amplitude <= 0 and CurrentAmplitude > 0:
                 IsCoupleOfPixelABlack = False
@@ -176,7 +178,10 @@ def SplitWord(ImagePath):
                         IsCoupleOfPixelABlack = True
                 if not IsCoupleOfPixelABlack:
                     IsDetectEndPoint = True
-                    EndPoint = i
+                    for NextPixel in range(SpaceWidth):
+                        if ListAmplitude[i + NextPixel]>0 or i+NextPixel>=len(ListAmplitude):
+                            break
+                    EndPoint = i + int(NextPixel/2)
                     # print('StartPoint: {}, EndPoint: {}'.format(StartPoint,EndPoint))
                     ListCroppedWord.append(img[:,max(StartPoint-int(img.shape[0]*math.sin(AngleBest)),0):min(EndPoint,img.shape[1])])
                     ListCroppedRealWord.append(imgReal[:,max(StartPoint-int(img.shape[0]*math.sin(AngleBest)),0):min(EndPoint,img.shape[1])])
@@ -202,6 +207,6 @@ def SplitWord(ImagePath):
 
 # SplitWord(ImagePath = './Capture1_1.png')
 # SplitWord(ImagePath = './Capture.png')
-SplitWord(ImagePath = './Capture4_2.png')
+SplitWord(ImagePath = './Capture1.png')
 # SplitWord(ImagePath = './Capture2_6.png')
 # ShowAmplitudeBar(ListAmplitude)

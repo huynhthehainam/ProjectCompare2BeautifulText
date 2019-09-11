@@ -1,7 +1,7 @@
 from keras.models import Sequential
 import time
 from keras.optimizers import Adam
-from keras.layers import Conv2D, ZeroPadding2D, Activation, Input, concatenate
+from keras.layers import Conv2D, ZeroPadding2D, Activation, Input, concatenate, Dropout
 from keras.models import Model
 from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import MaxPooling2D, AveragePooling2D
@@ -156,6 +156,7 @@ class SiameseModel:
         return True
 
     def LoadWeight(self, WeightPath):
+        print('Load weight from: {}'.format(WeightPath))
         self.Model.load_weights(WeightPath)
         return True
     
