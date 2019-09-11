@@ -89,7 +89,7 @@ def draw_underlined_text(draw, pos, text, font, under, **options):
         
 def text2IMG(sequences):
     bg_path = './Background/'
-    save_path = '../Data/'
+    save_path = '../Data1/'
     font_path = './Fonts/VN/'
     colors = {
                 0:(0, 0, 0),
@@ -116,11 +116,11 @@ def text2IMG(sequences):
                 draw = ImageDraw.Draw(img1)
                 fnt = ImageFont.truetype(font_path+font, f_size,encoding="utf-8")
                 width,height = draw.textsize(sequence,font=fnt)
-                new_img =img1.resize((width,height-2))
+                new_img =img1.resize((width-7,width))
                 draw = ImageDraw.Draw(new_img)
-                draw_underlined_text(draw, (-7,-5), sequence, font=fnt, fill=colors[random.choice([0,1])],under=random.choice([0,1]))
+                draw_underlined_text(draw, (-7,int((width-height)/2)-2), sequence, font=fnt, fill=colors[random.choice([0,1])],under=random.choice([0,1]))
                 new_img = new_img.resize((124,124))
-                data = img_to_array(new_img)   
+                data = img_to_array(new_img)
                 # expand dimension to one sample
                 samples = expand_dims(data, 0)
                 # prepare iterator
@@ -140,7 +140,7 @@ def text2IMG(sequences):
         
     print('done.')
 doc_path = './Text/'
-nb_sequence = 1000
+nb_sequence = 200
 token_index,index_token = getTokens(doc_path)
 sequences = randSeq(index_token,nb_sequence)
 text2IMG(sequences)
