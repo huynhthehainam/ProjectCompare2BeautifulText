@@ -85,17 +85,17 @@ class SiameseModel:
         self.InputByLocation = []
         self.Labels = []
         for i in range(self.NumberTotalData):
-            RandFolders = np.random.randint(len(self.Data),size = 2)
+            RandFolders = np.array(random.sample(list(range(len(self.Data))),k = 2))
             Folder1 = RandFolders[0]
             Folder2 = RandFolders[1]
-            RandImages = random.sample(list(range(10)),k = 2)
+            RandImages = np.array(random.sample(list(range(10)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder1,RandImage2]]
             if Location not in self.InputByLocation:
                 self.InputByLocation.append(Location)
                 self.Labels.append(1)
-            RandImages = random.sample(list(range(10)),k = 2)
+            RandImages = np.array(random.sample(list(range(10)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder2,RandImage2]]
@@ -141,9 +141,10 @@ class SiameseModel:
     
     def Train(self, SaveModelPath = None):
         print('Start training')
-        Pairs, Labels = random.shuffle(self.GetBatch())
-        print(len(Labels[0]))
+        Batch = self.GetBatch()
+        #print(len(Labels[0]))
         for  i  in range(self.Epochs):
+            Pairs, Labels = random.shuffle(Batch)
             for ii in range(len(Pairs)):
                 X = self.ConvertPairLocationToPairImage(Pairs[ii])
                 Y = np.array(Labels[ii])
@@ -161,10 +162,10 @@ class SiameseModel:
         return True
     
     def TestOneShot(self):
-        RandFolders = random.sample(list(range(len(self.Data))),k = 2)
+        RandFolders = np.array(random.sample(list(range(len(self.Data))),k = 2))
         Folder1 = RandFolders[0]
         Folder2 = RandFolders[1]
-        RandImages = random.sample(list(range(10)),k = 2)
+        RandImages = np.array(random.sample(list(range(10)),k = 2))
         RandImage1 = RandImages[0]
         RandImage2 = RandImages[1]
         Image1 = self.Data[Folder1][RandImage1]
