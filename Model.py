@@ -141,13 +141,13 @@ class SiameseModel:
     
     def Train(self, SaveModelPath = None):
         print('Start training')
-        Batch = self.GetBatch()
+        Pairs, Labels = self.GetBatch()
         #print(len(Labels[0]))
         for  i  in range(self.Epochs):
-            Pairs, Labels = random.shuffle(Batch)
             for ii in range(len(Pairs)):
                 X = self.ConvertPairLocationToPairImage(Pairs[ii])
                 Y = np.array(Labels[ii])
+                X, Y = shuffle(X,Y,random_state=0)
                 loss = self.Model.train_on_batch(X,Y)
             print('Epochs {} Loss: {}'.format(i,loss))
             self.TestOneShot()
