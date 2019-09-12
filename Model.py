@@ -61,10 +61,12 @@ class SiameseModel:
         prediction = Dense(1,activation='sigmoid',bias_initializer=self.initialize_bias)(L1_distance)
         siamese_net = Model(inputs=[left_input,right_input],outputs=prediction)
         return siamese_net
+    
     def __init__(self):
         self.Model = self.get_siamese_model((124,124,3))
         self.Optimizer = Adam(lr = 0.00006)
         self.Model.compile(loss="binary_crossentropy",optimizer=self.Optimizer)
+        
     def LoadRawData(self,DataPath):
         DataDir = os.path.join(DataPath)
         Folders = os.listdir(DataDir)
@@ -141,12 +143,15 @@ class SiameseModel:
     
     def Train(self, SaveModelPath = None):
         print('Start training')
-        Pairs, Labels = self.GetBatch()
         #print(len(Labels[0]))
         for  i  in range(self.Epochs):
+            Pairs, Labels = self.GetBatch()
+            Pairs, Labels = shuffle(Pairs,Labels,random_state=0)
             for ii in range(len(Pairs)):
                 X = self.ConvertPairLocationToPairImage(Pairs[ii])
                 Y = np.array(Labels[ii])
+                X[0],X[1], Y = shuffle(X[0],X[1],Y,random_state=0)
+                X = [X[0],X[1]]
                 loss = self.Model.train_on_batch(X,Y)
             print('Epochs {} Loss: {}'.format(i,loss))
             self.TestOneShot()
