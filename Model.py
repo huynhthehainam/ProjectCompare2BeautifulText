@@ -147,7 +147,6 @@ class SiameseModel:
             for ii in range(len(Pairs)):
                 X = self.ConvertPairLocationToPairImage(Pairs[ii])
                 Y = np.array(Labels[ii])
-                X, Y = shuffle(X,Y,random_state=0)
                 loss = self.Model.train_on_batch(X,Y)
             print('Epochs {} Loss: {}'.format(i,loss))
             self.TestOneShot()

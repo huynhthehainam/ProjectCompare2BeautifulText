@@ -89,7 +89,7 @@ def draw_underlined_text(draw, pos, text, font, under, **options):
         
 def text2IMG(sequences):
     bg_path = './Background/'
-    save_path = '../Data1/'
+    save_path = '../Data/'
     font_path = './Fonts/VN/'
     colors = {
                 0:(0, 0, 0),
@@ -123,6 +123,7 @@ def text2IMG(sequences):
                 data = img_to_array(new_img)
                 # expand dimension to one sample
                 samples = expand_dims(data, 0)
+                # prepare iterator
                 # prepare iterator
                 it = datagen.flow(samples, batch_size=1)
                 # generate samples and plot
