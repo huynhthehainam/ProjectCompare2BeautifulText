@@ -27,9 +27,8 @@ import random
 
 
 class SiameseModel:
-    NumberTotalData = 200
     BatchSize = 32
-    Epochs = 200
+    Iteration = 200000
     def initialize_weights(self,shape, name=None):
         return np.random.normal(loc = 0.0, scale = 1e-2, size = shape)
     def initialize_bias(self,shape, name=None):
@@ -78,85 +77,62 @@ class SiameseModel:
             for FileName in FileNames:
                 FolderData.append(cv2.imread(os.path.join(FolderDir,FileName)))
             self.Data.append(FolderData)
-        self.ProcessRawData()
+        #self.ProcessRawData()
         print('Finish Load Data')
 
         return True
-    def ProcessRawData(self):
-        print('Start creating batch')
-        self.InputByLocation = []
-        self.Labels = []
-        for i in range(self.NumberTotalData):
-            RandFolders = np.array(random.sample(list(range(len(self.Data))),k = 2))
-            Folder1 = RandFolders[0]
-            Folder2 = RandFolders[1]
+    def GetBatch(self):
+        #print('Start creating batch')
+        InputByLocation = []
+        Labels = []
+        ImageLeft = []
+        ImageRight = []
+        Folder1, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
+        for i in range(20):
             RandImages = np.array(random.sample(list(range(10)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder1,RandImage2]]
-            if Location not in self.InputByLocation:
-                self.InputByLocation.append(Location)
-                self.Labels.append(1)
+            if Location not in InputByLocation:
+                InputByLocation.append(Location)
+                ImageLeft.append(self.Data[Folder1][RandImage1])
+                ImageRight.append(self.Data[Folder1][RandImage2])
+                Labels.append(1)
+        
+        for i in range(13):
+            _, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
             RandImages = np.array(random.sample(list(range(10)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder2,RandImage2]]
-            if Location not in self.InputByLocation:
-                self.InputByLocation.append(Location)
+            if Location not in InputByLocation:
+                InputByLocation.append(Location)
+                ImageLeft.append(self.Data[Folder1][RandImage1])
+                ImageRight.append(self.Data[Folder2][RandImage2])
                 if Folder1 == Folder2:
-                    self.Labels.append(1)
+                    Labels.append(1)
                 else:
-                    self.Labels.append(0)
-        print('Finish Process Raw Data')
-        return True
-    def GetBatch(self):
-        Labels = []
-        InBatchLabel = []
-        Pair = []
-        BatchLocation0=[]
-        BatchLocation1=[]
-        for i in range(len(self.InputByLocation)):
-            if i % self.BatchSize !=0:
-                BatchLocation0.append(self.InputByLocation[i][0])
-                BatchLocation1.append(self.InputByLocation[i][1])
-                InBatchLabel.append(self.Labels[i])
-            else:
-                if len(InBatchLabel)!=0:
-                    Pair.append([BatchLocation0,BatchLocation1])
-                    BatchLocation0 = []
-                    BatchLocation1 =[]
-                    Labels.append(InBatchLabel)
-                    InBatchLabel = []
-                BatchLocation0.append(self.InputByLocation[i][0])
-                BatchLocation1.append(self.InputByLocation[i][1])
-                InBatchLabel.append(self.Labels[i])
-        return Pair, Labels
-    def GetImageFromLocation(self, Location):
-        return self.Data[Location[0]][Location[1]]
-    
-    def ConvertPairLocationToPairImage(self, Pair):
-        ImageList0=np.array([self.GetImageFromLocation(Location) for Location in Pair[0]])
-        ImageList1 = np.array([self.GetImageFromLocation(Location) for Location in Pair[1]])
-        return [ImageList0,ImageList1]
-
-
+                    Labels.append(0)
+        ImageLeft,ImageRight, Labels = shuffle(ImageLeft,ImageRight,Labels,random_state=0)
+        Pairs = [ImageLeft,ImageRight]
+        return Pairs, Labels
     
     def Train(self, SaveModelPath = None):
         print('Start training')
         #print(len(Labels[0]))
-        for  i  in range(self.Epochs):
-            Pairs, Labels = self.GetBatch()
-            Pairs, Labels = shuffle(Pairs,Labels,random_state=0)
-            for ii in range(len(Pairs)):
-                X = self.ConvertPairLocationToPairImage(Pairs[ii])
-                Y = np.array(Labels[ii])
-                X[0],X[1], Y = shuffle(X[0],X[1],Y,random_state=0)
-                X = [X[0],X[1]]
-                loss = self.Model.train_on_batch(X,Y)
-            print('Epochs {} Loss: {}'.format(i,loss))
-            self.TestOneShot()
+        BestLoss = 99999
+        for  i  in range(self.Iteration):
+            Pairs, Labels = self.GetBatch()     
+            X = Pairs
+            Y = np.array(Labels)
+            Loss = self.Model.train_on_batch(X,Y)
+            #self.TestOneShot()
             if SaveModelPath:
-                self.Model.save_weights(SaveModelPath)
+                if Loss < BestLoss:
+                    BestLoss = Loss
+                    self.Model.save_weights(SaveModelPath)
+                    print('Epochs {} Loss: {}'.format(i,Loss))
+            
         print('Train finished')
         return True
 
