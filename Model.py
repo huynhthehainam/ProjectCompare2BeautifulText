@@ -120,6 +120,7 @@ class SiameseModel:
     def Train(self, SaveModelPath = None):
         print('Start training')
         #print(len(Labels[0]))
+        Cache  = np.array([99999, 99999, 99999, 99999, 99999])
         BestLoss = 99999
         for  i  in range(self.Iteration):
             Pairs, Labels = self.GetBatch()     
@@ -128,7 +129,8 @@ class SiameseModel:
             Loss = self.Model.train_on_batch(X,Y)
             #self.TestOneShot()
             if SaveModelPath:
-                if Loss < BestLoss:
+                Cache[i%5] = Loss
+                if np.mean(Cache) < BestLoss:
                     BestLoss = Loss
                     self.Model.save_weights(SaveModelPath)
                     print('Epochs {} Loss: {}'.format(i,Loss))
