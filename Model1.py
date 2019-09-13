@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep 13 15:04:56 2019
+
+@author: ngo
+"""
+
 from keras.models import Sequential
 import time
 from keras.optimizers import Adam
@@ -62,34 +70,56 @@ class SiameseModel:
         return siamese_net
     
     def __init__(self):
-        self.Model = self.get_siamese_model((124,124,3))
+        #self.Model = self.get_siamese_model((124,124,3))
         self.Optimizer = Adam(lr = 0.00006)
-        self.Model.compile(loss="binary_crossentropy",optimizer=self.Optimizer)
+        #self.Model.compile(loss="binary_crossentropy",optimizer=self.Optimizer)
         
     def LoadRawData(self,DataPath):
-        DataDir = os.path.join(DataPath)
-        Folders = os.listdir(DataDir)
+        DataPath = os.path.join(DataPath)
+        SingleWordDir = os.listdir(DataPath)[0]
+        MultiWordDir = os.listdir(DataPath)[1]
         self.Data = []
-        for Folder in Folders:
+        self.data = []
+        DataDir = os.path.join(DataPath, SingleWordDir)
+        #print(os.listdir(DataDir))
+        SingleWordFolders = os.listdir(DataDir)
+        SingleWordFolders.sort()
+        #print (SingleWordFolders)
+        for Folder in SingleWordFolders:
             FolderData = []
             FolderDir = os.path.join(DataDir,Folder)
-            FileNames = os.listdir(os.path.join('Data',Folder))
+            FileNames = os.listdir(os.path.join(DataDir,Folder))
             for FileName in FileNames:
                 FolderData.append(cv2.imread(os.path.join(FolderDir,FileName)))
             self.Data.append(FolderData)
+        DataDir = os.path.join(DataPath, MultiWordDir)
+        #print(os.listdir(DataDir))
+        MultiWordFolders = os.listdir(DataDir)
+        MultiWordFolders.sort()
+        #print (MultiWordFolders)
+        for Folder in MultiWordFolders:
+            FolderData = []
+            FolderDir = os.path.join(DataDir,Folder)
+            FileNames = os.listdir(os.path.join(DataDir,Folder))
+            for FileName in FileNames:
+                FolderData.append(cv2.imread(os.path.join(FolderDir,FileName)))
+            self.data.append(FolderData)
         #self.ProcessRawData()
         print('Finish Load Data')
-
         return True
+
     def GetBatch(self):
         #print('Start creating batch')
         InputByLocation = []
         Labels = []
         ImageLeft = []
         ImageRight = []
+        NumberOfSample = 10
+        It = int(self.BatchSize*0.25)
         Folder1, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
-        for i in range(20):
-            RandImages = np.array(random.sample(list(range(10)),k = 2))
+        # Possitive (Single, Single)
+        for i in range(It):
+            RandImages = np.array(random.sample(list(range(NumberOfSample)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder1,RandImage2]]
@@ -99,9 +129,22 @@ class SiameseModel:
                 ImageRight.append(self.Data[Folder1][RandImage2])
                 Labels.append(1)
         
-        for i in range(13):
+        # Possitive (Single,  Multiple)
+        for i in range(It):
+            RandImages = np.array(random.sample(list(range(NumberOfSample)),k = 2))
+            RandImage1 = RandImages[0]
+            RandImage2 = RandImages[1]
+            Location  = [[Folder1,RandImage1],[Folder1,RandImage2]]
+            if Location not in InputByLocation:
+                InputByLocation.append(Location)
+                ImageLeft.append(self.Data[Folder1][RandImage1])
+                ImageRight.append(self.data[Folder1][RandImage2])
+                Labels.append(1)
+        
+        # Negetive (Single,  Single)
+        for i in range(It):
             _, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
-            RandImages = np.array(random.sample(list(range(10)),k = 2))
+            RandImages = np.array(random.sample(list(range(NumberOfSample)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder2,RandImage2]]
@@ -113,6 +156,23 @@ class SiameseModel:
                     Labels.append(1)
                 else:
                     Labels.append(0)
+                    
+        # Negetive (Single,  Multiple)
+        for i in range(It):
+            _, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
+            RandImages = np.array(random.sample(list(range(NumberOfSample)),k = 2))
+            RandImage1 = RandImages[0]
+            RandImage2 = RandImages[1]
+            Location  = [[Folder1,RandImage1],[Folder2,RandImage2]]
+            if Location not in InputByLocation:
+                InputByLocation.append(Location)
+                ImageLeft.append(self.Data[Folder1][RandImage1])
+                ImageRight.append(self.data[Folder2][RandImage2])
+                if Folder1 == Folder2:
+                    Labels.append(1)
+                else:
+                    Labels.append(0)
+        
         ImageLeft,ImageRight, Labels = shuffle(ImageLeft,ImageRight,Labels,random_state=0)
         Pairs = [ImageLeft,ImageRight]
         return Pairs, Labels
@@ -120,8 +180,8 @@ class SiameseModel:
     def Train(self, SaveModelPath = None):
         print('Start training')
         #print(len(Labels[0]))
-        Cache  = np.array([99999, 99999, 99999, 99999, 99999])
-        BestLoss = 99999
+        Cache  = np.array([0.07, 0.07, 0.07, 0.07, 0.07], dtype='float32')
+        BestLoss = 0.07
         for  i  in range(self.Iteration):
             Pairs, Labels = self.GetBatch()     
             X = Pairs
@@ -131,7 +191,7 @@ class SiameseModel:
             if SaveModelPath:
                 Cache[i%5] = Loss
                 if np.mean(Cache) < BestLoss:
-                    BestLoss = Loss
+                    BestLoss = np.mean(Cache)
                     self.Model.save_weights(SaveModelPath)
                     print('Epochs {} Loss: {}'.format(i,Loss))
             
