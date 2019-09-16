@@ -4,7 +4,7 @@ import numpy as np
 import glob
 import os
 import copy
-# from Model import SiameseModel
+from Model import SiameseModel
 
 class CompareTwoTextImage:
     ThresholdNumber = 145
@@ -25,16 +25,24 @@ class CompareTwoTextImage:
         Image1 = cv2.imread(Image1Path)
         Image2 = cv2.imread(Image2Path)
         ListWordImage1 = self.SplitWordCombine(Image1,145,(4,20))
-        # ListWordImage2 = self.SplitWordCombine(Image2,145,(4,5))
+        # ListWordImage2 = self.SplitWordCombine(Image2,145,(3,20))
+        # for i in range(len(ListWordImage1)):
+        #     ListWordImage1[i] = cv2.cvtColor(ListWordImage1[i],cv2.COLOR_BGR2GRAY)
+        #     ListWordImage1[i] = np.reshape(ListWordImage1[i],(124,124,1))/255
+        #     # ListWordImage1[i] = cv2.threshold(ListWordImage1[i],175,255)
+        # for i in range(len(ListWordImage2)):
+        #     ListWordImage2[i] = cv2.cvtColor(ListWordImage2[i],cv2.COLOR_BGR2GRAY)
+        #     ListWordImage2[i] = np.reshape(ListWordImage2[i],(124,124,1))/255
+        #     # ListWordImage2[i] = cv2.threshold(ListWordImage2[i],175,255)
         # CounterSame = 0
         # IndexNext = 0
         # for Index1 in range(len(ListWordImage1)):
         #     IsSame = False
-        #     for RangeIndex in range(-2,3):
+        #     for RangeIndex in range(-1,6):
         #         IndexNext = Index1
         #         Index2 = min(max(0, IndexNext + RangeIndex), len(ListWordImage2)-1)
         #         Pred = self.Model.PredictOnePairImage(ListWordImage1[Index1],ListWordImage2[Index2])
-        #         if Pred[0][0] >0.5:
+        #         if Pred[0][0] >0.2:
         #             IsSame = True
         #             IndexNext = Index2 +1
         #     if IsSame:
@@ -42,7 +50,7 @@ class CompareTwoTextImage:
                 
 
         #     else:
-        #         for RangeIndex in range(-2,3):
+        #         for RangeIndex in range(-1,6):
         #             IndexNext = Index1
         #             Index2 = min(max(0, IndexNext + RangeIndex), len(ListWordImage2)-1)
         #             Pred = self.Model.PredictOnePairImage(ListWordImage1[Index1],ListWordImage2[Index2])
@@ -135,27 +143,6 @@ class CompareTwoTextImage:
                 ListResizedCroppedRealWord.append(ResizedImage)
         for i,Image in enumerate(ListResizedCroppedRealWord):
             cv2.imwrite('./Result/Word{}.png'.format(i),Image)
-
-
-
-        # ListRatio = []
-        # for i, Image in enumerate(ListResizedCroppedRealWord):
-        #     Ratio = (Image.shape[1] / Image.shape[0])
-        #     if Ratio >5:
-        #         NewKernel = Kernel
-        #         AA = NewKernel[0]-1
-        #         BB =  NewKernel[1]
-        #         NewKernel = (AA,BB)
-        #         NewSplitedWord = self.SplitWord(Image,ThresholdNumber,NewKernel)
-        #         if len(NewSplitedWord)>1:
-        #             for aaa in NewSplitedWord:
-        #                 cv2.imshow('',aaa)
-        #                 cv2.waitKey(0)
-        #                 cv2.destroyAllWindows()
-        #         print(NewKernel)
-        #     ListRatio.append(Ratio)
-        #     print('Word {} ratio {}'.format(i,Ratio))
-        # print('Max: {} Index Max: {}'.format(max(ListRatio),ListRatio.index(max(ListRatio))))
         print(len(ListResizedCroppedRealWord))
         return ListResizedCroppedRealWord
 
@@ -171,7 +158,7 @@ class CompareTwoTextImage:
                 ListNumber[IndexFill] += 5
         return ListNumber
 ModelSiamese = ''
-# ModelSiamese = SiameseModel()
-# ModelSiamese.LoadWeight('WeightProject.h5')
+ModelSiamese = SiameseModel()
+ModelSiamese.LoadWeight('WeightProject.h5')
 CompareCore = CompareTwoTextImage(ModelSiamese)
-print(CompareCore.CompareTwoImage('Capture.png','TestProject2.PNG'))
+print(CompareCore.CompareTwoImage('TestProject1.png','TestProject2.PNG'))
