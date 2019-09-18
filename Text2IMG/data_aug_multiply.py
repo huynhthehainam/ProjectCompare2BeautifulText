@@ -26,8 +26,8 @@ from keras.preprocessing.image import ImageDataGenerator
 #read data from docx and get words
 def getTokens(doc_path):
     chars = ['“','”','"','.',', ',':','?','>','<',';',':','[',']','{','}',"''",') ',' (','! ','- ','_ ']
-    k_mode = ['normal','upper','lower','title']
-    modes = {'normal':str,'upper':str.upper,'lower':str.lower,'title':str.title}
+    k_mode = ['lower']
+    modes = {'lower':str.lower}
     token_index = {'.':1}
     index_token = {1:'.'}
     for t in os.listdir(doc_path):
@@ -94,14 +94,23 @@ def randSeq(words):
     #cache_sequences = []
     sequences = []
     for i in range(len(words)):
-        sequence = words[i]
-        random.shuffle(key_list)
-        #random.shuffle(nb_words)
-        for idx in range(nb_words[0]):        
-            sequence += ' '+words[key_list[idx]]
-            indexOfA, indexOfB = i, key_list[idx]
+        choice = random.choice([0,1])
+        if choice == 1:
+            sequence = words[i]
+            random.shuffle(key_list)
+            #random.shuffle(nb_words)
+            for idx in range(nb_words[0]):        
+                sequence += ' '+words[key_list[idx]]
+                indexOfA, indexOfB = i, key_list[idx]
+                indexOfPairs.append([indexOfA, indexOfB])
+            sequences.append(sequence)
+        else:
+            random.shuffle(key_list)
+            sequence = words[key_list[0]]
+            sequence += ' '+words[i]
+            indexOfA, indexOfB = i, key_list[0]
             indexOfPairs.append([indexOfA, indexOfB])
-        sequences.append(sequence)
+            sequences.append(sequence)
     return sequences, indexOfPairs
 
 def draw_underlined_text(draw, pos, text, font, under, **options):
@@ -110,8 +119,14 @@ def draw_underlined_text(draw, pos, text, font, under, **options):
     lx, ly = pos[0], pos[1] + theight
     draw.text(pos, text, font=font, **options)
     if under == 1:
-        draw.line((lx+7, ly+1, lx + twidth, ly+1), **options)
-        
+        draw.line((lx, ly+1, lx + twidth, ly+1), **options)
+def swap(sequence):
+    words = sequence.split(' ')
+    if random.choice([0,1]) == 1 and len(words) > 1:
+       sequence = ''
+       sequence = words[1]+' '+words[0]
+    return sequence
+
 def text2IMG(sequences, indexOfPairs = None, save_path = None):
     bg_path = './Background/'
     if not save_path:
@@ -120,6 +135,8 @@ def text2IMG(sequences, indexOfPairs = None, save_path = None):
     spath = ''
     if indexOfPairs:
         spath = '_'
+    k_mode = ['normal','upper','lower','title']
+    modes = {'normal':str,'upper':str.upper,'lower':str.lower,'title':str.title}
     colors = {
                 0:(0, 0, 0),
                 1:(255, 0, 0)
@@ -128,10 +145,12 @@ def text2IMG(sequences, indexOfPairs = None, save_path = None):
     f_size = 25
     count = 0
     nb_gen = 2
+    
     datagen = ImageDataGenerator(
-            zca_whitening=True, featurewise_center=True,featurewise_std_normalization=True,
-            rotation_range=0.8, zoom_range=[0.95, 1.05], brightness_range=[0.2,1.0],
-            width_shift_range=0.01, height_shift_range=0.1, shear_range=0.01
+            #zca_whitening=True, featurewise_center=True,featurewise_std_normalization=True,
+            #rotation_range=0.8, zoom_range=[0.95, 1.05], brightness_range=[0.2,1.0],
+            #width_shift_range=0.01, 
+            height_shift_range=0.1, shear_range=0.01
     )
     for sequence in sequences:
         if spath:
@@ -146,13 +165,14 @@ def text2IMG(sequences, indexOfPairs = None, save_path = None):
                 img1 = img.copy()
                 draw = ImageDraw.Draw(img1)
                 fnt = ImageFont.truetype(font_path+font, f_size,encoding="utf-8")
+                sequence = swap(sequence)
+                sequence = modes[k_mode[random.choice([0,1,2,3])]](sequence)            
                 width,height = draw.textsize(sequence,font=fnt)
-                new_img =img1.resize((max(width,height),max(width,height)))
+                size = max(width,height)
+                new_img =img1.resize((size,size))
                 draw = ImageDraw.Draw(new_img)
-                p = (0,int((max(width,height)-height)/2))
-                if max(width,height) == height:
-                    p = (int((max(width,height)-width)/2),int((max(width,height)-height)/2))
-                draw_underlined_text(draw, p, sequence, font=fnt, fill=colors[random.choice([0,1])],under=random.choice([0,1]))
+                p = (int((size-width)/2),int((size-height)/2)-5)
+                draw_underlined_text(draw, p, sequence, font=fnt, fill=colors[0],under=random.choice([0]))
                 new_img = new_img.resize((124,124))
                 data = img_to_array(new_img)
                 # expand dimension to one sample
@@ -174,9 +194,10 @@ def text2IMG(sequences, indexOfPairs = None, save_path = None):
         seq_idx += 1
     print('done.')
 doc_path = './Text/'
-nb_sequence = 10
+nb_sequence = 100
 token_index,index_token = getTokens(doc_path)
 words = randWord(index_token,nb_sequence)
+words = list(set(words))
 sequences, indexOfPairs = randSeq(words)
 text2IMG(words, save_path='../Data/Single/')
 text2IMG(sequences,indexOfPairs, save_path='../Data/Multi/')

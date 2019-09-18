@@ -70,7 +70,7 @@ class SiameseModel:
         return siamese_net
     
     def __init__(self):
-        #self.Model = self.get_siamese_model((124,124,3))
+        #self.Model = self.get_siamese_model((124,124,1))
         self.Optimizer = Adam(lr = 0.00006)
         #self.Model.compile(loss="binary_crossentropy",optimizer=self.Optimizer)
         
@@ -90,19 +90,26 @@ class SiameseModel:
             FolderDir = os.path.join(DataDir,Folder)
             FileNames = os.listdir(os.path.join(DataDir,Folder))
             for FileName in FileNames:
-                FolderData.append(cv2.imread(os.path.join(FolderDir,FileName)))
+                Image = np.array(cv2.imread(os.path.join(FolderDir,FileName),0)
+                                    , dtype = 'float32')/255
+                ReshapedImage = np.reshape(Image,(124, 124, 1))
+                FolderData.append(ReshapedImage)
             self.Data.append(FolderData)
         DataDir = os.path.join(DataPath, MultiWordDir)
         #print(os.listdir(DataDir))
         MultiWordFolders = os.listdir(DataDir)
         MultiWordFolders.sort()
+        self.SubInName = [[int(Name.split('_')[0]),int(Name.split('_')[1])] for Name in MultiWordFolders]
         #print (MultiWordFolders)
         for Folder in MultiWordFolders:
             FolderData = []
             FolderDir = os.path.join(DataDir,Folder)
             FileNames = os.listdir(os.path.join(DataDir,Folder))
             for FileName in FileNames:
-                FolderData.append(cv2.imread(os.path.join(FolderDir,FileName)))
+                Image = np.array(cv2.imread(os.path.join(FolderDir,FileName),0)
+                                    , dtype = 'float32')/255
+                ReshapedImage = np.reshape(Image,(124, 124, 1))
+                FolderData.append(ReshapedImage)
             self.data.append(FolderData)
         #self.ProcessRawData()
         print('Finish Load Data')
@@ -143,7 +150,9 @@ class SiameseModel:
         
         # Negetive (Single,  Single)
         for i in range(It):
-            _, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
+            IndexOfFolders = list(range(len(self.Data)))
+            IndexOfFolders.remove(Folder1)
+            _, Folder2 = np.array(random.sample(IndexOfFolders,k = 2))
             RandImages = np.array(random.sample(list(range(NumberOfSample)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
@@ -159,12 +168,14 @@ class SiameseModel:
                     
         # Negetive (Single,  Multiple)
         for i in range(It):
-            _, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
+            IndexOfFolders = list(range(len(self.Data)))
+            IndexOfFolders.remove(Folder1)
+            _, Folder2 = np.array(random.sample(IndexOfFolders,k = 2))
             RandImages = np.array(random.sample(list(range(NumberOfSample)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
             Location  = [[Folder1,RandImage1],[Folder2,RandImage2]]
-            if Location not in InputByLocation:
+            if Location not in InputByLocation  and Folder1 not in self.SubInName[Folder2]:
                 InputByLocation.append(Location)
                 ImageLeft.append(self.Data[Folder1][RandImage1])
                 ImageRight.append(self.data[Folder2][RandImage2])
@@ -180,8 +191,8 @@ class SiameseModel:
     def Train(self, SaveModelPath = None):
         print('Start training')
         #print(len(Labels[0]))
-        Cache  = np.array([0.07, 0.07, 0.07, 0.07, 0.07], dtype='float32')
-        BestLoss = 0.07
+        Cache  = np.array([0.5, 0.5, 0.5, 0.5, 0.5], dtype='float32')
+        BestLoss = 0.5
         for  i  in range(self.Iteration):
             Pairs, Labels = self.GetBatch()     
             X = Pairs
@@ -193,7 +204,7 @@ class SiameseModel:
                 if np.mean(Cache) < BestLoss:
                     BestLoss = np.mean(Cache)
                     self.Model.save_weights(SaveModelPath)
-                    print('Epochs {} Loss: {}'.format(i,Loss))
+                    print('Epochs {} Loss: {} MeanLoss: {}'.format(i,Loss,BestLoss))
             
         print('Train finished')
         return True

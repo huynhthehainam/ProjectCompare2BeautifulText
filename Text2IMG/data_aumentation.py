@@ -61,22 +61,28 @@ def getTokens(doc_path):
 
 #random sequence
 def randSeq(index_token,nb_sequence):
+    chars = ['“','!','@','#','$','%','^','&','*',
+             '”','"','.',',',':','?','>','<',';',
+             ':','[',']','{','}',"''",')','(','!',
+             '+','=','`','~','-','_']
     key_list= list(range(1,len(index_token)+1))
     random.shuffle(key_list)
     #nb_words = list(range(5,25))
     nb_words = [1]   
     sequences = []
-    w_seq = []
     for i in range(nb_sequence):
-        width = 0
+        random.shuffle(chars)
+        ext_char = {
+                        0:'',
+                        1:chars[0]
+                    }
         sequence = ''
         #random.shuffle(key_list)
         random.shuffle(nb_words)
         for idx in range(nb_words[0]):
             #sequence += ' '+index_token[key_list[idx]]
-            sequence += ' '+index_token[key_list[i]]
+            sequence += ' '+index_token[key_list[i]] + ext_char[random.choice([0,1])]
         sequences.append(sequence)
-        w_seq.append(width)
     return sequences
 
 def draw_underlined_text(draw, pos, text, font, under, **options):
@@ -141,7 +147,7 @@ def text2IMG(sequences):
         
     print('done.')
 doc_path = './Text/'
-nb_sequence = 1000
+nb_sequence = 100
 token_index,index_token = getTokens(doc_path)
 sequences = randSeq(index_token,nb_sequence)
 text2IMG(sequences)
