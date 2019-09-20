@@ -89,8 +89,10 @@ class SiameseModel:
         Labels = []
         ImageLeft = []
         ImageRight = []
+        It = int(self.BatchSize*0.7)
+        
         Folder1, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
-        for i in range(20):
+        for i in range(It):
             RandImages = np.array(random.sample(list(range(10)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
@@ -101,8 +103,10 @@ class SiameseModel:
                 ImageRight.append(self.Data[Folder1][RandImage2])
                 Labels.append(1)
         
-        for i in range(13):
-            _, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
+        for i in range(self.BatchSize-It):
+            IndexOfFolders = list(range(len(self.Data)))
+            IndexOfFolders.remove(Folder1)
+            _, Folder2 = np.array(random.sample(IndexOfFolders,k = 2))
             RandImages = np.array(random.sample(list(range(10)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
@@ -166,9 +170,9 @@ class SiameseModel:
           
 
     def PredictOnePairImage(self, Image1, Image2):
-        Image1 = np.array([Image1], dtype='float32')/255
+        Image1 = np.array([Image1], dtype='float32')
         Image1 = np.reshape(Image1,(1,124,124,1))
-        Image2 = np.array([Image2], dtype='float32')/255
+        Image2 = np.array([Image2], dtype='float32')
         Image2 = np.reshape(Image2,(1,124,124,1))
         return self.Model.predict_on_batch([Image1,Image2])
 
