@@ -50,7 +50,7 @@ class SiameseModel:
         model.add(Conv2D(256, (4,4), activation='relu', kernel_initializer=self.initialize_weights,
                         bias_initializer=self.initialize_bias, kernel_regularizer=l2(2e-4)))
         model.add(Flatten())
-        model.add(Dense(4096, activation='sigmoid',
+        model.add(Dense(8192, activation='sigmoid',
                     kernel_regularizer=l2(1e-3),
                     kernel_initializer=self.initialize_weights,bias_initializer=self.initialize_bias))
         encoded_l = model(left_input)
@@ -62,9 +62,9 @@ class SiameseModel:
         return siamese_net
     
     def __init__(self):
-        #self.Model = self.get_siamese_model((124,124,1))
+        self.Model = self.get_siamese_model((124,124,1))
         self.Optimizer = Adam(lr = 0.00006)
-        #self.Model.compile(loss="binary_crossentropy",optimizer=self.Optimizer)
+        self.Model.compile(loss="binary_crossentropy",optimizer=self.Optimizer)
         
     def LoadRawData(self,DataPath):
         DataDir = os.path.join(DataPath)
@@ -83,16 +83,17 @@ class SiameseModel:
         print('Finish Load Data')
 
         return True
-    def GetBatch(self):
+    def GetBatch(self, Iteration):
         #print('Start creating batch')
         InputByLocation = []
         Labels = []
         ImageLeft = []
         ImageRight = []
-        It = int(self.BatchSize*0.7)
-        
-        Folder1, Folder2 = np.array(random.sample(list(range(len(self.Data))),k = 2))
-        for i in range(It):
+        Folder1 = Iteration%len(self.Data)
+        IndexOfFolders = list(range(len(self.Data)))
+        IndexOfFolders.remove(Folder1)
+        _, Folder2 = np.array(random.sample(IndexOfFolders,k = 2))
+        for ii in range(24):
             RandImages = np.array(random.sample(list(range(10)),k = 2))
             RandImage1 = RandImages[0]
             RandImage2 = RandImages[1]
@@ -103,7 +104,7 @@ class SiameseModel:
                 ImageRight.append(self.Data[Folder1][RandImage2])
                 Labels.append(1)
         
-        for i in range(self.BatchSize-It):
+        for ii in range(8):
             IndexOfFolders = list(range(len(self.Data)))
             IndexOfFolders.remove(Folder1)
             _, Folder2 = np.array(random.sample(IndexOfFolders,k = 2))
@@ -126,21 +127,18 @@ class SiameseModel:
     def Train(self, SaveModelPath = None):
         print('Start training')
         #print(len(Labels[0]))
-        Cache  = np.array([0.2, 0.2, 0.2, 0.2, 0.2], dtype ='float32')
-        BestLoss = 0.2
+        #Cache  = np.array([0.2, 0.2, 0.2, 0.2, 0.2], dtype ='float32')
+        #BestLoss = 0.2
         for  i  in range(self.Iteration):
-            Pairs, Labels = self.GetBatch()     
+            Pairs, Labels = self.GetBatch(i)     
             X = Pairs
             Y = np.array(Labels)
             Loss = self.Model.train_on_batch(X,Y)
             #self.TestOneShot()
-            if SaveModelPath:
-                Cache[i%5] = Loss
-                if np.mean(Cache) < BestLoss:
-                    BestLoss = np.mean(Cache)
-                    self.Model.save_weights(SaveModelPath)
-                    print('Epochs {} Loss: {} MeanLoss: {}'.format(i,Loss,BestLoss))
-            
+            if SaveModelPath and i%1000 == 0:
+                self.Model.save_weights(SaveModelPath)
+                print('Epochs {} Loss: {}'.format(i,Loss))
+                self.TestOneShot()
         print('Train finished')
         return True
 
